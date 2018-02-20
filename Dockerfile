@@ -170,4 +170,4 @@ EXPOSE 5601 9200 9300 5514 5515 5516
 VOLUME /var/lib/elasticsearch
 
 CMD [ "/usr/local/bin/start.sh" ]
-#CMD [ "/usr/local/bin/start_curl.sh" ]
+CMD [ "/usr/local/bin/start_curl.sh" ]
