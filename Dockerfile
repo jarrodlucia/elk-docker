@@ -8,8 +8,7 @@
 # docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5514:5514 -p 5515:5515 -p 5516:5516 -it --name elk <repo-user>/elk
 
 FROM phusion/baseimage
-MAINTAINER Sebastien Pujadas http://pujadas.net - master
-FORKED Jarrod Lucia (F5 reporting specific)
+MAINTAINER Sebastien Pujadas http://pujadas.net - master - forked by Jarrod Lucia (F5 reporting specific)
 ENV REFRESHED_AT 2018-02-20
 
 
