@@ -5,10 +5,10 @@
 # docker build -t <repo-user>/elk .
 
 # Run with:
-# docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5514:5514 -p 5515:5515 -p 5516:5516 -it --name elk <repo-user>/elk
+# docker run -p 5601:5601 -p 9200:9200 -p 5514:5514 -p 5515:5515 -p 5516:5516 -it --name elk <repo-user>/elk
 
 FROM phusion/baseimage
-MAINTAINER Sebastien Pujadas http://pujadas.net - master - forked by Jarrod Lucia (F5 reporting specific)
+MAINTAINER Jarrod Lucia (F5 reporting specific)
 ENV REFRESHED_AT 2018-02-20
 
 
@@ -63,6 +63,11 @@ ADD ./elasticsearch-init /etc/init.d/elasticsearch
 RUN sed -i -e 's#^ES_HOME=$#ES_HOME='$ES_HOME'#' /etc/init.d/elasticsearch \
  && chmod +x /etc/init.d/elasticsearch
 
+# Download JSON templates for Logstash / ES
+
+RUN curl -L -o /etc/elasticsearch/scripts/afm_mapping.json "https://raw.githubusercontent.com/jarrodlucia/bigip_elk_server/develop/json/afm_mapping.json" \
+ && curl -L -o /etc/elasticsearch/scripts/pem_mapping.json "https://raw.githubusercontent.com/jarrodlucia/bigip_elk_server/develop/json/pem_mapping.json" \
+ && curl -L -o /etc/elasticsearch/scripts/dns_mapping.json "https://raw.githubusercontent.com/jarrodlucia/bigip_elk_server/develop/json/dns_mapping.json"
 
 ### install Logstash
 
@@ -125,16 +130,7 @@ RUN cp ${ES_HOME}/config/log4j2.properties ${ES_HOME}/config/jvm.options \
 
 ### configure Logstash
 
-# certs/keys for Beats and Lumberjack input
-#RUN mkdir -p /etc/pki/tls/certs && mkdir /etc/pki/tls/private
-#ADD ./logstash-beats.crt /etc/pki/tls/certs/logstash-beats.crt
-#ADD ./logstash-beats.key /etc/pki/tls/private/logstash-beats.key
-
 # filters
-#ADD ./02-beats-input.conf ${LOGSTASH_PATH_CONF}/conf.d/02-beats-input.conf
-#ADD ./10-syslog.conf ${LOGSTASH_PATH_CONF}/conf.d/10-syslog.conf
-#ADD ./11-nginx.conf ${LOGSTASH_PATH_CONF}/conf.d/11-nginx.conf
-#ADD ./30-output.conf ${LOGSTASH_PATH_CONF}/conf.d/30-output.conf
 ADD ./logstash_main.conf ${LOGSTASH_PATH_CONF}/conf.d/logstash_main.conf
 
 # patterns
@@ -163,10 +159,15 @@ ADD ./kibana.yml ${KIBANA_HOME}/config/kibana.yml
 #                                   START
 ###############################################################################
 
+#Add CURL script to populate templates
+ADD ./start_curl.sh /usr/local/bin/start_curl.sh
+RUN chmod +x /usr/local/bin/start_curl.sh
+
 ADD ./start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-EXPOSE 5601 9200 9300 5044 5514 5515 5516
+EXPOSE 5601 9200 9300 5514 5515 5516
 VOLUME /var/lib/elasticsearch
 
 CMD [ "/usr/local/bin/start.sh" ]
+CMD [ "/usr/local/bin/start_curl.sh" ]
